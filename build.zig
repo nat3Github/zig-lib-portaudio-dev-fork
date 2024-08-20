@@ -1,6 +1,6 @@
 const std = @import("std");
 
-const HostApi = enum {
+pub const HostApi = enum {
     alsa,
     asihpi,
     asio,
@@ -12,9 +12,11 @@ const HostApi = enum {
     wdmks,
     wmme,
 
-    const defaults_macos = [_]HostApi{.coreaudio};
-    const defaults_linux = [_]HostApi{.alsa};
-    const defaults_windows = [_]HostApi{.wasapi};
+    pub const defaults = struct {
+        pub const macos: []const HostApi = &.{.coreaudio};
+        pub const linux: []const HostApi = &.{.alsa};
+        pub const windows: []const HostApi = &.{.wasapi};
+    };
 };
 
 fn unsupportedOs(os: std.Target.Os.Tag) noreturn {
@@ -54,9 +56,9 @@ pub fn build(b: *std.Build) !void {
     const host_apis = blk: {
         const maybe_opts = b.option([]const HostApi, "host-api", "Enable specific host audio APIs");
         break :blk if (maybe_opts) |opts| opts else switch (t.os.tag) {
-            .macos => &HostApi.defaults_macos,
-            .linux => &HostApi.defaults_linux,
-            .windows => &HostApi.defaults_windows,
+            .macos => HostApi.defaults.macos,
+            .linux => HostApi.defaults.linux,
+            .windows => HostApi.defaults.windows,
             else => unsupportedOs(t.os.tag),
         };
     };
