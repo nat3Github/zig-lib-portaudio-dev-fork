@@ -1,0 +1,17 @@
+.{
+    .name = "portaudio",
+    .version = "19.7.0",
+    .minimum_zig_version = "0.13.0",
+    .dependencies = .{
+        .portaudio = .{
+            .url = "https://github.com/PortAudio/portaudio/archive/refs/tags/v19.7.0.tar.gz",
+            .hash = "1220a96e42d87ae966106483e3351919c95b7c8129942c355fd173b38b2e7a0ae0a0",
+        },
+    },
+    .paths = .{
+        "LICENSE",
+        "README.md",
+        "build.zig",
+        "build.zig.zon",
+    },
+}
