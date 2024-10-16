@@ -1,6 +1,6 @@
 .{
     .name = "portaudio",
-    .version = "19.7.0-1",
+    .version = "19.7.0-2",
     .minimum_zig_version = "0.13.0",
     .dependencies = .{
         .portaudio = .{

@@ -183,6 +183,7 @@ const src_common = &.{
 };
 
 const src_os_unix = &.{
+    "src/os/unix/pa_pthread_util.c",
     "src/os/unix/pa_unix_hostapis.c",
     "src/os/unix/pa_unix_util.c",
 };
