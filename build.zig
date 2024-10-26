@@ -192,6 +192,7 @@ const src_os_win = &.{
     "src/os/win/pa_win_coinitialize.c",
     "src/os/win/pa_win_hostapis.c",
     "src/os/win/pa_win_util.c",
+    "src/os/win/pa_win_version.c",
     "src/os/win/pa_win_waveformat.c",
     "src/os/win/pa_win_wdmks_utils.c",
     "src/os/win/pa_x86_plain_converters.c",
