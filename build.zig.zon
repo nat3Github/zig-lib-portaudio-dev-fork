@@ -8,6 +8,7 @@
             .hash = "12204186a16ba21dd8fc671754ef4e327ec3db7cbe5761a6c9f559fab69926f70add",
         },
     },
+    .fingerprint = 0x2a7a2a316f30fe5a, // Changing this has security and trust implications.
     .paths = .{
         "LICENSE",
         "README.md",
