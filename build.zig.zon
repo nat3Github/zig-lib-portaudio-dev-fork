@@ -5,7 +5,7 @@
     .dependencies = .{
         .portaudio = .{
             .url = "git+https://github.com/PortAudio/portaudio.git?ref=master#57aa393109ec996799d3a5846c9ecb0a65b64644",
-            .hash = "12204186a16ba21dd8fc671754ef4e327ec3db7cbe5761a6c9f559fab69926f70add",
+            .hash = "N-V-__8AALlCbABBhqFroh3Y_GcXVO9OMn7D23y-V2GmyfVZ",
         },
     },
     .fingerprint = 0x2a7a2a316f30fe5a, // Changing this has security and trust implications.
