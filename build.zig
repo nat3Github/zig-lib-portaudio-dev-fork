@@ -165,8 +165,15 @@ pub fn build(b: *std.Build) !void {
         },
         else => unsupportedOs(t.os.tag),
     }
-
     b.installArtifact(lib);
+
+    const portaudio_translate_c = b.addTranslateC(.{
+        .optimize = optimize,
+        .target = target,
+        .root_source_file = pa.path("include/portaudio.h"),
+    });
+    const portaudio_mod = portaudio_translate_c.createModule();
+    portaudio_mod.linkLibrary(lib);
 }
 
 const src_common = &.{
