@@ -174,6 +174,21 @@ pub fn build(b: *std.Build) !void {
     });
     const portaudio_mod = portaudio_translate_c.createModule();
     portaudio_mod.linkLibrary(lib);
+    const root_mod = b.addModule("portaudio", .{
+        .root_source_file = b.path("portaudio.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    root_mod.addImport("portaudio_c", portaudio_mod);
+
+    const root_mod_test = b.addTest(.{
+        .optimize = optimize,
+        .target = target,
+        .root_module = root_mod,
+    });
+    const root_mod_test_run = b.addRunArtifact(root_mod_test);
+    const test_step = b.step("test", "test");
+    test_step.dependOn(&root_mod_test_run.step);
 }
 
 const src_common = &.{
