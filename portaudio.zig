@@ -177,7 +177,7 @@ pub const TStreamF32 = struct {
         out_channels: usize,
     };
     stream: Stream,
-    user_data: *UserData,
+    user_data: UserData,
     alloc: Allocator,
 
     fn callback(
@@ -206,7 +206,7 @@ pub const TStreamF32 = struct {
         return c.paContinue;
     }
     pub fn init(
-        alloc: Allocator,
+        self: *@This(),
         t: *anyopaque,
         /// *T, input interleaved, output interleaved, frames
         t_callback: *const fn (*anyopaque, []const f32, []f32, usize) void,
@@ -217,16 +217,13 @@ pub const TStreamF32 = struct {
         out_channels: usize,
         srate: f64,
         frames: usize,
-    ) !@This() {
-        const ud = UserData{
+    ) !void {
+        self.user_data = UserData{
             .in_channels = in_channels,
             .out_channels = out_channels,
             .t = t,
             .t_callback = t_callback,
         };
-        const user_data = try alloc.create(UserData);
-        user_data.* = ud;
-
         const config: Stream.Config = .{
             .flags = flags orelse c.paNoFlag,
             .frames = frames,
@@ -244,21 +241,14 @@ pub const TStreamF32 = struct {
             },
             .srate = srate,
         };
-        const stream = try Stream.init(
+        self.stream = try Stream.init(
             config,
             callback,
-            user_data,
+            &self.user_data,
         );
-        return @This(){
-            .stream = stream,
-            .user_data = user_data,
-            .alloc = alloc,
-        };
-    }
-    pub fn deinit(self: *@This()) void {
-        self.alloc.destroy(self.user_data);
     }
 };
+
 fn print_device_info(
     pa: *PortAudio,
     dv_idx: usize,
@@ -358,7 +348,6 @@ test "play sine" {
     defer alloc.destroy(tcb);
     const in_channels: usize = @intCast(def_in_info.maxInputChannels);
     const out_channels: usize = @intCast(def_out_info.maxOutputChannels);
-    std.log.warn("in: {} out {}", .{ in_channels, out_channels });
 
     const frames = 2048;
     var sw = try TStreamF32.init(
