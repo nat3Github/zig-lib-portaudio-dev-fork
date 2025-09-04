@@ -189,15 +189,15 @@ pub const TStreamF32 = struct {
         user_data: ?*anyopaque,
     ) callconv(.c) c_int {
         if (in_ptr == null or out_ptr == null) return c.paAbort;
-        const ud = @as(*UserData, @alignCast(@ptrCast(user_data)));
+        const ud = @as(*UserData, @ptrCast(@alignCast(user_data)));
         const frames: usize = @intCast(cframes);
 
-        const in_p: [*]f32 = @alignCast(@ptrCast(out_ptr));
+        const in_p: [*]f32 = @ptrCast(@alignCast(out_ptr));
         var in_slc: []f32 = undefined;
         in_slc.len = frames * ud.in_channels;
         in_slc.ptr = in_p;
 
-        const out_p: [*]f32 = @alignCast(@ptrCast(out_ptr));
+        const out_p: [*]f32 = @ptrCast(@alignCast(out_ptr));
         var out_slice: []f32 = undefined;
         out_slice.len = frames * ud.out_channels;
         out_slice.ptr = out_p;
@@ -308,7 +308,7 @@ const Sine = struct {
         return std.math.sin(2.0 * std.math.pi * frequency * time);
     }
     fn callback(xself: *anyopaque, _: []const f32, out: []f32, frames: usize) void {
-        const self: *Sine = @alignCast(@ptrCast(xself));
+        const self: *Sine = @ptrCast(@alignCast(xself));
         var vol: f32 = 1.0 / (@as(f32, @floatFromInt(self.sinex + 1)) / 1000.0);
         vol = 1.0;
         if (self.stop.load(.unordered)) {
@@ -350,8 +350,8 @@ test "play sine" {
     const out_channels: usize = @intCast(def_out_info.maxOutputChannels);
 
     const frames = 2048;
-    var sw = try TStreamF32.init(
-        alloc,
+    var sw: TStreamF32 = undefined;
+    try sw.init(
         tcb,
         Sine.callback,
         null,
@@ -362,7 +362,6 @@ test "play sine" {
         48000,
         frames,
     );
-    defer sw.deinit();
     try sw.stream.start();
     std.Thread.sleep(2e9);
     stop.store(true, .unordered);

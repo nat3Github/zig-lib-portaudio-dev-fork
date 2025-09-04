@@ -37,15 +37,16 @@ pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
     const shared = b.option(bool, "shared", "Create shared library instead of static") orelse false;
-    const lib = if (shared) b.addSharedLibrary(.{
-        .name = "portaudio",
-        .target = target,
-        .optimize = optimize,
-    }) else b.addStaticLibrary(.{
-        .name = "portaudio",
+    const lib_root_mod = b.createModule(.{
         .target = target,
         .optimize = optimize,
     });
+    const lib = b.addLibrary(.{
+        .name = "portaudio",
+        .root_module = lib_root_mod,
+        .linkage = if (shared) .dynamic else .static,
+    });
+
     lib.addIncludePath(pa.path("include"));
     lib.addIncludePath(pa.path("src/common"));
     lib.installHeadersDirectory(pa.path("include"), "", .{});
@@ -64,15 +65,15 @@ pub fn build(b: *std.Build) !void {
         };
     };
 
-    var flags = std.ArrayList([]const u8).init(b.allocator);
-    defer flags.deinit();
+    var flags = std.ArrayList([]const u8){};
+    defer flags.deinit(b.allocator);
 
     switch (t.os.tag) {
         .macos => {
             for (host_apis) |api| {
                 switch (api) {
                     .coreaudio => {
-                        try flags.append("-DPA_USE_COREAUDIO=1");
+                        try flags.append(b.allocator, "-DPA_USE_COREAUDIO=1");
                         lib.addIncludePath(pa.path("src/hostapi/coreaudio"));
                         lib.addCSourceFiles(.{ .root = pa_root, .files = src_hostapi_coreaudio });
                         lib.linkFramework("AudioToolbox");
@@ -90,30 +91,30 @@ pub fn build(b: *std.Build) !void {
             for (host_apis) |api| {
                 switch (api) {
                     .alsa => {
-                        try flags.append("-DPA_USE_ALSA=1");
+                        try flags.append(b.allocator, "-DPA_USE_ALSA=1");
                         lib.addIncludePath(pa.path("src/hostapi/alsa"));
                         lib.addCSourceFiles(.{ .root = pa_root, .files = src_hostapi_alsa });
                         lib.linkSystemLibrary("asound");
                     },
                     .asihpi => {
-                        try flags.append("-DPA_USE_ASIHPI=1");
+                        try flags.append(b.allocator, "-DPA_USE_ASIHPI=1");
                         lib.addIncludePath(pa.path("src/hostapi/asihpi"));
                         lib.addCSourceFiles(.{ .root = pa_root, .files = src_hostapi_asihpi });
                         lib.linkSystemLibrary("asihpi");
                     },
                     .jack => {
-                        try flags.append("-DPA_USE_JACK=1");
+                        try flags.append(b.allocator, "-DPA_USE_JACK=1");
                         lib.addIncludePath(pa.path("src/hostapi/jack"));
                         lib.addCSourceFiles(.{ .root = pa_root, .files = src_hostapi_jack });
                         lib.linkSystemLibrary("jack");
                     },
                     .oss => {
-                        try flags.append("-DPA_USE_OSS=1");
+                        try flags.append(b.allocator, "-DPA_USE_OSS=1");
                         lib.addIncludePath(pa.path("src/hostapi/oss"));
                         lib.addCSourceFiles(.{ .root = pa_root, .files = src_hostapi_oss });
                     },
                     .pulseaudio => {
-                        try flags.append("-DPA_USE_PULSEAUDIO=1");
+                        try flags.append(b.allocator, "-DPA_USE_PULSEAUDIO=1");
                         lib.addIncludePath(pa.path("src/hostapi/pulseaudio"));
                         lib.addCSourceFiles(.{ .root = pa_root, .files = src_hostapi_pulseaudio });
                         lib.linkSystemLibrary("pulse");
@@ -136,22 +137,22 @@ pub fn build(b: *std.Build) !void {
                         std.process.exit(1);
                     },
                     .dsound => {
-                        try flags.append("-DPA_USE_DS=1");
+                        try flags.append(b.allocator, "-DPA_USE_DS=1");
                         lib.addIncludePath(pa.path("src/hostapi/dsound"));
                         lib.addCSourceFiles(.{ .root = pa_root, .files = src_hostapi_dsound });
                     },
                     .wasapi => {
-                        try flags.append("-DPA_USE_WASAPI=1");
+                        try flags.append(b.allocator, "-DPA_USE_WASAPI=1");
                         lib.addIncludePath(pa.path("src/hostapi/wasapi"));
                         lib.addCSourceFiles(.{ .root = pa_root, .files = src_hostapi_wasapi });
                     },
                     .wdmks => {
-                        try flags.append("-DPA_USE_WDMKS=1");
+                        try flags.append(b.allocator, "-DPA_USE_WDMKS=1");
                         lib.addIncludePath(pa.path("src/hostapi/wdmks"));
                         lib.addCSourceFiles(.{ .root = pa_root, .files = src_hostapi_wdmks });
                     },
                     .wmme => {
-                        try flags.append("-DPA_USE_WMME=1");
+                        try flags.append(b.allocator, "-DPA_USE_WMME=1");
                         lib.addIncludePath(pa.path("src/hostapi/wmme"));
                         lib.addCSourceFiles(.{ .root = pa_root, .files = src_hostapi_wmme });
                     },
@@ -182,8 +183,6 @@ pub fn build(b: *std.Build) !void {
     root_mod.addImport("portaudio_c", portaudio_mod);
 
     const root_mod_test = b.addTest(.{
-        .optimize = optimize,
-        .target = target,
         .root_module = root_mod,
     });
     const root_mod_test_run = b.addRunArtifact(root_mod_test);
